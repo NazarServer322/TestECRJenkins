@@ -1,56 +1,48 @@
 pipeline {
-    agent any 
+    agent {
+        label 'ubuntu'
+    }
     environment {
-        //TODO # 1 --> once you sign up for Docker hub, use that user_id here
-        registry = "ananthkannan/mypython-app-may20"
-        //TODO #2 - update your credentials ID after creating credentials for connecting to Docker Hub
-        registryCredential = 'fa32f95a-2d3e-4c7b-8f34-11bcc0191d70'
-        dockerImage = ''
+     registry = "12345.dkr.ecr.eu-north-1.amazonaws.com/hello-world"
     }
-    
     stages {
-        stage('Cloning Git') {
+        // it's how to find our github without SCM inside jenkins 
+        stage('gitchecout') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '', url: 'https://github.com/akannan1087/myPythonDockerRepo']]])       
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/NazarServer322/TestcECRJenkins.git']]])
             }
-        }
-    
-    // Building Docker images
-    stage('Building image') {
-      steps{
-        script {
-          dockerImage = docker.build registry
-        }
-      }
-    }
-    
-     // Uploading Docker images into Docker Hub
-    stage('Upload Image') {
-     steps{    
-         script {
-            docker.withRegistry( '', registryCredential ) {
-            dockerImage.push()
             }
-        }
-      }
-    }
-    
-     // Stopping Docker containers for cleaner Docker run
-     stage('docker stop container') {
-         steps {
-            sh 'docker ps -f name=mypythonContainer -q | xargs --no-run-if-empty docker container stop'
-            sh 'docker container ls -a -fname=mypythonContainer -q | xargs -r docker container rm'
-         }
-       }
-    
-    
-    // Running Docker container, make sure port 8096 is opened in 
-    stage('Docker Run') {
-     steps{
-         script {
-            dockerImage.run("-p 8096:5000 --rm --name mypythonContainer")
-         }
-      }
-    }
-  }
+            
+        stage('Building image') {
+            steps{
+             sh 'sudo docker build -t 1124124125124.dkr.ecr.eu-north-1.amazonaws.com/hello-world .'
+            }
+            }
+          // Here i'm  find not best practice to login in docker ECR but it's work. First of all need find the key here need write the command:
+          //aws ecr get-login-password --region eu-north-1 and then make docker login -u aws -p   ssh key super long (awsID).dkr.ecr.(region).amazonaws.com
+ 
+
+        stage('docker login') {
+            steps{
+             sh 'sudo docker login -u AWS -p 412412412412414125125215l1QTkyTDF1234mJ3a1NWY0xUUm5213aEZObklRS1hwWnJaOHhJVnJZYXJyQU15XNyTDVkRjZmK0t52FlkMWNCTmZwZ2dLd21234a0d3dDJ5'
+            }
+            }
+           // In AWS ECR we have to change name our docker image  and give the name our ECR registry for our docker image 
+        stage('docker rename for aws') {
+            steps{
+             sh 'sudo docker tag pythonapp:v1 1234.dkr.ecr.eu-north-1.amazonaws.com/hello-world'
+            }
+            }
+        stage('docker push') {
+            steps{
+             sh 'sudo docker push 12412.dkr.ecr.eu-north-1.amazonaws.com/hello-world'
+            }
+            }
+        stage('docker run') {
+            steps{
+             sh 'sudo docker run -d  -p 8096:5000 --restart=always --name awsdocker  124124.dkr.ecr.eu-north-1.amazonaws.com/hello-world'
+            }
+            }    
+            
+}
 }
